@@ -54,7 +54,10 @@ const News = (props)=>{
         return (
             <>
                 <h1 className="text-center" style={{ margin: '35px 0px', marginTop: '90px' }}>NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines</h1>
-                {loading && <Spinner />}         
+                {loading && <Spinner />}    
+                {!loading && articles.length === 0 && (
+    <h2 className="text-center">No articles available.</h2>
+)}     
                 <InfiniteScroll
     dataLength={articles?.length || 0} // Ensure articles is defined
     next={fetchMoreData}
