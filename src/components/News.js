@@ -1,104 +1,105 @@
-import React, {useEffect, useState} from 'react'
-
-import NewsItem from './NewsItem'
+import React, { useEffect, useState } from 'react';
+import NewsItem from './NewsItem';
 import Spinner from './Spinner';
-import PropTypes from 'prop-types'
-import InfiniteScroll from "react-infinite-scroll-component";
+import PropTypes from 'prop-types';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
-const News = (props)=>{
-    const [articles, setArticles] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [page, setPage] = useState(1)
-    const [totalResults, setTotalResults] = useState(0)
-    
-    const capitalizeFirstLetter = (string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    } 
+const News = ({ country = 'us', pageSize = 8, category = 'sports', apiKey, setProgress }) => {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
-    const updateNews = async () => {
-        props.setProgress(10);
-        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`;
-        setLoading(true);
-        try {
-            let data = await fetch(url);
-            let parsedData = await data.json();
-            console.log(parsedData); // Debug: Check API response
-            props.setProgress(70);
-            setArticles(parsedData.articles || []); // Safeguard against undefined articles
-            setTotalResults(parsedData.totalResults || 0);
-            setLoading(false);
-        } catch (error) {
-            console.error("Error fetching news:", error);
-            setLoading(false);
-        }
-        props.setProgress(100);
-    };
-    
+  const capitalizeFirstLetter = (string) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
 
-    useEffect(() => {
-        document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
-        updateNews(); 
-        // eslint-disable-next-line
-    }, [])
+  const updateNews = async () => {
+    setProgress(10);
+    const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${apiKey}&page=${page}&pageSize=${pageSize}`;
+    setLoading(true);
+    try {
+      let data = await fetch(url);
+      let parsedData = await data.json();
+      console.log(parsedData); // Debugging line
+      setProgress(70);
+      if (parsedData.articles) {
+        setArticles(parsedData.articles);
+        setTotalResults(parsedData.totalResults);
+      } else {
+        setArticles([]);
+        setTotalResults(0);
+      }
+      setLoading(false);
+      setProgress(100);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+    }
+  };
 
+  useEffect(() => {
+    document.title = `${capitalizeFirstLetter(category)} - NewsMonkey`;
+    updateNews();
+    // eslint-disable-next-line
+  }, []);
 
-    const fetchMoreData = async () => {   
-        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`;
-        setPage(page+1) 
-        let data = await fetch(url);
-        let parsedData = await data.json()
-        setArticles(articles.concat(parsedData.articles))
-        setTotalResults(parsedData.totalResults)
-      };
- 
-        return (
-            <>
-                <h1 className="text-center" style={{ margin: '35px 0px', marginTop: '90px' }}>NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines</h1>
-                {loading && <Spinner />}    
-                {!loading && articles.length === 0 && (
-    <h2 className="text-center">No articles available.</h2>
-)}     
-                <InfiniteScroll
-    dataLength={articles?.length || 0} // Ensure articles is defined
-    next={fetchMoreData}
-    hasMore={articles?.length !== totalResults}
-    loader={<Spinner />}
->
-    <div className="container">
-        <div className="row">
-            {articles?.map((element) => (
-                <div className="col-md-4" key={element.url}>
-                    <NewsItem
-                        title={element.title || ""}
-                        description={element.description || ""}
-                        imageUrl={element.urlToImage}
-                        newsUrl={element.url}
-                        author={element.author}
-                        date={element.publishedAt}
-                        source={element.source.name}
-                    />
-                </div>
+  const fetchMoreData = async () => {
+    const url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${apiKey}&page=${page}&pageSize=${pageSize}`;
+    setPage(page + 1);
+    try {
+      let data = await fetch(url);
+      let parsedData = await data.json();
+      console.log(parsedData); // Debugging line
+      if (parsedData.articles) {
+        setArticles(articles.concat(parsedData.articles));
+        setTotalResults(parsedData.totalResults);
+      }
+    } catch (error) {
+      console.error('Error fetching more news:', error);
+    }
+  };
+
+  return (
+    <>
+      <h1 className="text-center" style={{ margin: '35px 0px', marginTop: '90px' }}>
+        NewsMonkey - Top {capitalizeFirstLetter(category)} Headlines
+      </h1>
+      {loading && <Spinner />}
+      {articles.length === 0 && !loading && <div className="text-center">No articles found.</div>}
+      <InfiniteScroll
+        dataLength={articles ? articles.length : 0}
+        next={fetchMoreData}
+        hasMore={articles.length !== totalResults}
+        loader={<Spinner />}
+      >
+        <div className="container">
+          <div className="row">
+            {articles && articles.map((element) => (
+              <div className="col-md-4" key={element.url}>
+                <NewsItem
+                  title={element.title || ''}
+                  description={element.description || ''}
+                  imageUrl={element.urlToImage}
+                  newsUrl={element.url}
+                  author={element.author}
+                  date={element.publishedAt}
+                  source={element.source.name}
+                />
+              </div>
             ))}
+          </div>
         </div>
-    </div>
-</InfiniteScroll>
-
-            </>
-        )
-    
-}
-
-
-News.defaultProps = {
-    country: 'in',
-    pageSize: 8,
-    category: 'general',
-}
+      </InfiniteScroll>
+    </>
+  );
+};
 
 News.propTypes = {
-    country: PropTypes.string,
-    pageSize: PropTypes.number,
-    category: PropTypes.string,
-}
+  country: PropTypes.string,
+  pageSize: PropTypes.number,
+  category: PropTypes.string,
+  apiKey: PropTypes.string,
+  setProgress: PropTypes.func,
+};
 
-export default News
+export default News;
