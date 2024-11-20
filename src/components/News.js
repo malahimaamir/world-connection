@@ -62,7 +62,7 @@ const News = ({ country = 'us', pageSize = 8, category = 'sports', apiKey, setPr
   return (
     <>
       <h1 className="text-center" style={{ margin: '35px 0px', marginTop: '90px' }}>
-        NewsMonkey - Top {capitalizeFirstLetter(category)} Headlines
+      worldconnection - Top {capitalizeFirstLetter(category)} Headlines
       </h1>
       {loading && <Spinner />}
       {articles.length === 0 && !loading && <div className="text-center">No articles found.</div>}
